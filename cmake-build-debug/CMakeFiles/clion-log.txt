@@ -1,0 +1,7 @@
+/snap/clion/209/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/snap/clion/209/bin/ninja/linux/ninja -G Ninja -S /home/nabcellent/Desktop/C++/CAT2 -B /home/nabcellent/Desktop/C++/CAT2/cmake-build-debug
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so   
+-- Checking for module 'glut'
+--   No package 'glut' found
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/nabcellent/Desktop/C++/CAT2/cmake-build-debug

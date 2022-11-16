@@ -1,0 +1,3 @@
+/home/nabcellent/Desktop/C++/CAT2/cmake-build-debug/CMakeFiles/CAT2.dir
+/home/nabcellent/Desktop/C++/CAT2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/nabcellent/Desktop/C++/CAT2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
