@@ -2,7 +2,6 @@
 #include<GL/glut.h>
 #include<ctime>
 #include<cstdio>
-#include<cmath>
 
 #define BLOCK_SPEED 0.09
 #define BOOSTER_MAX 50
@@ -15,7 +14,6 @@ int SCREEN_H = 600, SCREEN_W = 800;
 //---------------- Obstacles declaration----------
 typedef struct building {
     float block_x, block_y;
-
     bool state;
     int no_floors;
 } building;
@@ -24,6 +22,11 @@ typedef struct Cloud {
     float block_x, block_y;
     bool state;
 } Cloud;
+
+typedef struct Tree {
+    float block_x, block_y;
+    bool state;
+} Tree;
 
 
 //-------------------declarations---------------
@@ -35,6 +38,7 @@ char scoreStr[20], levelStr[20];   //score string and level string
 int level = 1, buildColor;     // initial level=1
 building b;  // building struct
 Cloud s;     // cloud struct
+Tree t;     // cloud struct
 float booster = BOOSTER_MAX, boost = 0;
 
 //plane bounds
@@ -46,7 +50,7 @@ void mouse(int button, int state, int x, int y);
 
 void buildingBlock();
 
-void CloudBlock();
+void cloudBlock();
 
 void init();
 
@@ -61,6 +65,8 @@ void welcome();
 void drawBuilding();
 
 void drawCloud();
+
+void drawTree();
 
 bool cloudHit();
 
@@ -77,60 +83,42 @@ void moveJetDown();
 
 void buildingBlock() {
     b.block_x = 50.0;
-    srand(time(0));
+    srand(time(nullptr));
     b.no_floors = rand() % 3 + 4;
 
     buildColor = rand() % 3;
 
-    b.block_y = b.no_floors * 10 + 15;   // generate block y cordinate depending on no of floors
+    b.block_y = b.no_floors * 10 + 15;   // generate block y coordinate depending on no of floors
     b.state = true;
     s.state = false;
+    t.state = false;
 }
 
-void CloudBlock() {
+void cloudBlock() {
     s.block_x = 50.0;
 
-    srand(time(0));
+    srand(time(nullptr));
 
     s.block_y = (rand() % 30) + 50;   //randomly generate block y coordinate
-    s.state = true;
     b.state = false;
+    s.state = true;
+    t.state = false;
 }
 
-void semiCircle(float p1, float q1, float radius) {
-    float p, q;
-    float angle;
-    glBegin(GL_POINTS);
+void treeBlock() {
+    t.block_x = 50.0;
 
-    for (angle = 1.0f; angle < 360.0f; angle++) {
-        p = p1 + sin(angle) * radius;
-        q = q1 + cos(angle) * radius;
-        if (q >= 100)
-            glVertex2f(p, q);
-    }
-    glEnd();
+    srand(time(nullptr));
 
-}
-
-
-void Circle(float x1, float y1, float radius) {
-    float x2, y2;
-    float angle;
-    glBegin(GL_POINTS);
-
-    for (angle = 1.0f; angle < 360.0f; angle++) {
-        x2 = x1 + sin(angle) * radius;
-        y2 = y1 + cos(angle) * radius;
-        glVertex2f(x2, y2);
-    }
-    glEnd();
-
+    t.block_y = 10;   //randomly generate block y coordinate
+    t.state = true;
+    b.state = false;
+    s.state = false;
 }
 
 void drawJet() {
     //left tail wing
-
-    glColor3f(0.6, 0.6, 0.6);
+    glColor3f(0.9, 0.9, 0.9);
     glBegin(GL_POLYGON);
     glVertex2f(5.5, 47.0);
     glVertex2f(8.5, 47.0);
@@ -138,9 +126,8 @@ void drawJet() {
     glVertex2f(4.5, 48.0);
     glEnd();
 
-
     //left front wing
-    glColor3f(0.6, 0.6, 0.6);
+    glColor3f(0.9, 0.9, 0.9);
     glBegin(GL_POLYGON);
     glVertex2f(13.0, 47.0);
     glVertex2f(20.0, 47.0);
@@ -149,7 +136,7 @@ void drawJet() {
     glEnd();
 
     //tail
-    glColor3f(0.5, 0.5, 0.5);
+    glColor3f(0.3, 0.3, 0.3);
     glBegin(GL_POLYGON);
     glVertex2f(4.7, 45.0);
     glVertex2f(5.5, 51.0);
@@ -157,9 +144,8 @@ void drawJet() {
     glVertex2f(9.0, 45.0);
     glEnd();
 
-
     //body
-    glColor3f(0.5, 0.5, 0.5);
+    glColor3f(0.3, 0.3, 0.3);
     glBegin(GL_POLYGON);
     glVertex2f(5.0, 48.0);
     glVertex2f(11.0, 48.0);
@@ -168,9 +154,8 @@ void drawJet() {
     glVertex2f(5.0, 45.0);
     glEnd();
 
-
     //right front wing
-    glColor3f(0.6, 0.6, 0.6);
+    glColor3f(0.9, 0.9, 0.9);
     glBegin(GL_POLYGON);
     glVertex2f(13.0, 46.0);
     glVertex2f(18.0, 46.0);
@@ -178,9 +163,8 @@ void drawJet() {
     glVertex2f(11.0, 41.0);
     glEnd();
 
-
     //dome
-    glColor3f(0.0, 0.0, 0.0);
+    glColor3f(0.7, 0.7, 0.7);
     glBegin(GL_POLYGON);
     glVertex2f(13.0, 47.0);
     glVertex2f(15.0, 48.5);
@@ -192,16 +176,14 @@ void drawJet() {
     glVertex2f(13.0, 47.0);
     glEnd();
 
-
     //right tail wing
-    glColor3f(0.6, 0.6, 0.6);
+    glColor3f(0.9, 0.9, 0.9);
     glBegin(GL_POLYGON);
     glVertex2f(5.5, 47.0);
     glVertex2f(8.5, 47.0);
     glVertex2f(5.5, 43.0);
     glVertex2f(4.5, 43.0);
     glEnd();
-
 
     // front tip
     glColor3f(0.4, 0.4, 0.4);
@@ -213,7 +195,6 @@ void drawJet() {
     glVertex2f(22.0, 46.5);
     glEnd();
 }
-
 
 void drawString(float x, float y, float z, void *font, char *string) {
     char *c;
@@ -467,6 +448,46 @@ void drawCloud() {
     glutSolidSphere(5, 100, 10);
 }
 
+float red = 0.0f;//0.47f;
+float green = 1.0f;//0.0f;
+float blue = 0.0f;//0.74f;
+
+void drawTree(float height, float base) {
+    float angle;
+
+    glPushMatrix();
+    GLUquadricObj *qobj;
+    qobj = gluNewQuadric();
+    glColor3f(red, green, blue);
+    glPushMatrix();
+    glRotatef(-90, 1.0f, 0.0f, 0.0f);
+    gluCylinder(qobj, base, base - (0.2 * base), height, 20, 20);
+    glPopMatrix();
+    glTranslatef(0.0f, height, 0.0f);
+
+    height -= height * 0.2f;
+    base -= base * 0.3f;
+
+    if (height > 1) {
+        angle = 22.5f;
+
+        glPushMatrix();
+        glRotatef(angle, -1.0f, 0.0f, 0.0f);
+        drawTree(height, base);
+        glPopMatrix();
+        glPushMatrix();
+        glRotatef(angle, 0.5f, 0.0f, 0.866f);
+        drawTree(height, base);
+        glPopMatrix();
+        glPushMatrix();
+        glRotatef(angle, 0.5f, 0.0f, -0.866f);
+        drawTree(height, base);
+        glPopMatrix();
+    }
+
+    glPopMatrix();
+}
+
 bool cloudHit() {
     if (s.block_x < 13 && s.block_x > -5)
         if (plane_movement - 3 + 50 > s.block_y - 3 &&
@@ -656,23 +677,26 @@ void display() {
         if (booster <= BOOSTER_MAX && !boost) booster += 0.005;
 
         //for new building //building has gone outside the screen-state=true
-        if ((b.state && b.block_x < -10) || (s.state && s.block_x < -10)) {
+        if ((b.state && b.block_x < -10) || (s.state && s.block_x < -10) || (t.state && t.block_x < -10)) {
             srand(time(NULL));
-            int random = rand() % 2;    //for random building or cloud
+            int random = rand() % 3;    //  for random building, tree or cloud
 
-            if (random == 0) buildingBlock(); else CloudBlock();
+            if (random == 0) buildingBlock(); else if (random == 1) cloudBlock(); else treeBlock();
         } else if (b.state) {
             if (booster > 0 && boost) {
                 b.block_x -= blockSpeed + boost;
-                booster = booster - 0.02; //reduce to normal speed after leaving boost key
+                booster = booster - 0.02; //    reduce to normal speed after leaving boost key
             } else b.block_x -= blockSpeed;
         } else if (s.state) {
             if (booster > 0 && boost) {
                 s.block_x -= blockSpeed + boost;
                 booster = booster - 0.02;
-            } else {
-                s.block_x -= blockSpeed;
-            }
+            } else s.block_x -= blockSpeed;
+        } else if (t.state) {
+            if (booster > 0 && boost) {
+                t.block_x -= blockSpeed + boost;
+                booster = booster - 0.02;
+            } else t.block_x -= blockSpeed;
         }
 
         if (b.state) {
@@ -681,10 +705,13 @@ void display() {
         } else if (s.state) {
             glTranslatef(s.block_x, 0.0, 0.0);
             drawCloud();
+        } else if (t.state) {
+            glTranslatef(t.block_x, t.block_y, 0.0);
+//            glTranslatef(t.block_x, 10.0, 0.0);
+            drawTree(5.0f, 0.2f);
         }
 
         glPopMatrix();
-
         printScore();
     }
 
@@ -790,6 +817,24 @@ void keyPressed(unsigned char key, int x, int y) {
     glutPostRedisplay();
 }
 
+void specialKey(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_UP:
+            glutIdleFunc(moveJetUP);
+            break;
+        case GLUT_KEY_DOWN:
+            glutIdleFunc(moveJetDown);
+            break;
+        case GLUT_KEY_RIGHT:
+            boost = 0.05;
+            break;
+        case GLUT_KEY_LEFT:
+            boost = 0;
+    }
+
+    glutPostRedisplay();
+}
+
 void myReshape(int w, int h) {
     SCREEN_H = h, SCREEN_W = w;
     printf("width = %d\theight= %d", w, h);
@@ -801,10 +846,10 @@ void myReshape(int w, int h) {
 }
 
 void init() {
-    srand(time(0));
-    int random = rand() % 2;
+    srand(time(nullptr));
+    int random = rand() % 3;
 
-    if (random == 0) buildingBlock(); else CloudBlock();
+    if (random == 0) buildingBlock(); else if (random == 1) cloudBlock(); else treeBlock();
 }
 
 int main(int argc, char **argv) {
@@ -820,6 +865,7 @@ int main(int argc, char **argv) {
     glutReshapeFunc(myReshape);
     glutMouseFunc(mouse);
     glutKeyboardFunc(keyPressed);
+    glutSpecialFunc(specialKey);
     glutMainLoop();
 
     return 0;
